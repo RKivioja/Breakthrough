@@ -19,7 +19,7 @@ namespace Lauta
     /// </summary>
     public partial class Lauta : UserControl
     {
-        private static object siirrettavaNappula;
+        private static UIElement siirrettavaNappula;
         private static UIElement poistettavaNappula;
         private static bool nappulaValittu;
         private static bool mustanVuoro;
@@ -44,18 +44,6 @@ namespace Lauta
             mustanVuoro = false;
         }
 
-        
-        /// <summary>
-        /// Ottaa talteen nappulan, jota meinataan siirtää.
-        /// </summary>
-        /// <param name="sender">Eventin laukaissut nappula</param>
-        /// <param name="e">Sisältää tietoja eventistä</param>
-        private static void nappula_OnNappulaClicked(object sender, RoutedEventArgs e)
-        {
-            siirrettavaNappula = sender;
-            nappulaValittu = true;
-        }
-
         /// <summary>
         /// Ottaa talteen nappulan, joka meinataan poistaa.
         /// </summary>
@@ -63,6 +51,7 @@ namespace Lauta
         /// <param name="e">Sisältää tietoja eventistä</param>
         private void nappula_OnNappulaMouseDown(object sender, RoutedEventArgs e)
         {
+            siirrettavaNappula = (UIElement)sender;
             if (nappulaValittu)
             {
                 poistettavaNappula = sender as UIElement;
@@ -145,7 +134,6 @@ namespace Lauta
                     nappula.HorizontalAlignment = HorizontalAlignment.Stretch;
                     nappula.VerticalAlignment = VerticalAlignment.Stretch;
 
-                    nappula.OnNappulaClicked += nappula_OnNappulaClicked;
                     nappula.OnNappulaMouseDown += nappula_OnNappulaMouseDown; //
                     
                     gridPelialue.Children.Add(nappula);
@@ -166,7 +154,6 @@ namespace Lauta
                     nappula.HorizontalAlignment = HorizontalAlignment.Stretch;
                     nappula.VerticalAlignment = VerticalAlignment.Stretch;
 
-                    nappula.OnNappulaClicked += nappula_OnNappulaClicked;
                     nappula.OnNappulaMouseDown += nappula_OnNappulaMouseDown; //
 
                     gridPelialue.Children.Add(nappula);
@@ -250,6 +237,13 @@ namespace Lauta
 
         }
 
+        private static void siirraNappulaa()
+        {
+        }
+
+        private static void syoNappula()
+        {
+        }
 
         /// <summary>
         /// Aliohjelma, jossa käsitellään erilaiset voittoon liittyvät tapahtumat.
