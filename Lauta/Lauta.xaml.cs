@@ -19,8 +19,8 @@ namespace Lauta
     /// </summary>
     public partial class Lauta : UserControl
     {
-        private static UIElement siirrettavaNappula;
-        private static UIElement poistettavaNappula;
+        private static Nappula.Nappula valittuNappula;
+        private static Nappula.Nappula poistettavaNappula;
         private static bool nappulaValittu;
         private static bool mustanVuoro;
         private static bool peliOhi;
@@ -30,8 +30,6 @@ namespace Lauta
         private static int siirrettavarow;
         private static int kohderuutucolumn;
         private static int kohderuuturow;
-        private static int poistettavacolumn;
-        private static int poistettavarow;
 
 
         /// <summary>
@@ -45,24 +43,30 @@ namespace Lauta
         }
 
         /// <summary>
-        /// Ottaa talteen nappulan, joka meinataan poistaa.
+        /// Ottaa talteen nappulan, jonka kohdalla on painettu hiiren näppäintä.
         /// </summary>
         /// <param name="sender">Eventin laukaissut nappula</param>
         /// <param name="e">Sisältää tietoja eventistä</param>
         private void nappula_OnNappulaMouseDown(object sender, RoutedEventArgs e)
         {
-            siirrettavaNappula = (UIElement)sender;
-            if (nappulaValittu)
+            if (valittuNappula == null)
             {
-                poistettavaNappula = sender as UIElement;
-                poistettavacolumn = (int)poistettavaNappula.GetValue(Grid.ColumnProperty);
-                poistettavarow = (int)poistettavaNappula.GetValue(Grid.RowProperty);
+                valittuNappula = (Nappula.Nappula)sender; // 1. Nappula valitaan aktiiviseksi (click)
             }
             else
             {
-                poistettavaNappula = null;
+                poistettavaNappula = (Nappula.Nappula)sender;
             }
-            
+            //5. Jos klikataan omaa nappulaa niin vaihdetaan aktiviseksi nappulaksi klikattu oma nappula eli palataan kohtaan 1.
+            if (nappulaValittu == false)
+            {
+                nappulaValittu = true; // 2. Laitetaan talteen tieto aktiivisesti nappulasta
+            }
+            else
+            {
+                //3. Jos seuraavaksi klikataan vastustajan nappulaa niin tarkistetaan olisiko se tallessa olevalle nappulalle kelvollinen syötävä
+                syoNappula(poistettavaNappula);
+            }
         }
 
         /// <summary>
@@ -169,7 +173,7 @@ namespace Lauta
         private void label_Click(object sender, RoutedEventArgs e)
         {
             Label kohderuutu = sender as Label;
-            Nappula.Nappula siirrettava = siirrettavaNappula as Nappula.Nappula;
+            Nappula.Nappula siirrettava = valittuNappula as Nappula.Nappula;
 
             try
             {
@@ -183,22 +187,26 @@ namespace Lauta
             {
             }
 
-            if (siirrettavaNappula != null && peliOhi == false)
+            if (valittuNappula != null && peliOhi == false)
             {
                 if (Math.Abs(siirrettavacolumn - kohderuutucolumn) < 2 && Math.Abs(siirrettavarow - kohderuuturow) < 2 && siirrettavarow < kohderuuturow && siirrettava.Musta == true && mustanVuoro == true)
                 {
-                    
+                    //4. Jos seuraavaksi klikataankin tyhjää ruutua niin tarkistetaan olisiko se tallessa olevalle nappulalle kelvollinen siirto
+                    /*
                     if (poistettavaNappula != null && poistettavacolumn == kohderuutucolumn && poistettavarow == kohderuuturow)
                     {
                         gridPelialue.Children.Remove(poistettavaNappula);
                     }
 
-                    siirrettava.SetValue(Grid.ColumnProperty, kohderuutucolumn);
+                    siirrettava.SetValue(Grid.ColumnProperty, kohderuutucolumn); //4.1 Jos on niin siirretään nappula tähän ruutuun
                     siirrettava.SetValue(Grid.RowProperty, kohderuuturow);
+                    */
 
+                    siirraNappulaa(siirrettava, kohderuutucolumn, kohderuuturow);
+                    
                     nappulaValittu = false;
                     
-                    siirrettavaNappula = null;
+                    valittuNappula = null;
                     
                     mustanVuoro = false;
 
@@ -211,19 +219,12 @@ namespace Lauta
 
                 if (Math.Abs(siirrettavacolumn - kohderuutucolumn) < 2 && Math.Abs(siirrettavarow - kohderuuturow) < 2 && siirrettavarow > kohderuuturow && siirrettava.Musta == false && mustanVuoro == false)
                 {
-                    
-                    if (poistettavaNappula != null && poistettavacolumn == kohderuutucolumn && poistettavarow == kohderuuturow)
-                    {
-                        gridPelialue.Children.Remove(poistettavaNappula);
-                    }
 
-                    siirrettava.SetValue(Grid.ColumnProperty, kohderuutucolumn);
-                    siirrettava.SetValue(Grid.RowProperty, kohderuuturow);
-
+                    siirraNappulaa(siirrettava, kohderuutucolumn, kohderuuturow);
                     
                     nappulaValittu = false;
 
-                    siirrettavaNappula = null;
+                    valittuNappula = null;
 
                     mustanVuoro = true;
 
@@ -234,15 +235,26 @@ namespace Lauta
                     }
                 }
             }
+            //4.1 Jos ei niin ei tehdä mitään
 
         }
 
-        private static void siirraNappulaa()
+        private static void siirraNappulaa(Nappula.Nappula siirrettava, int kohdecolumn, int kohderow)
         {
+            siirrettava.SetValue(Grid.ColumnProperty, kohdecolumn); //4.1 Jos on niin siirretään nappula tähän ruutuun
+            siirrettava.SetValue(Grid.RowProperty, kohderow);
         }
 
-        private static void syoNappula()
+        private void syoNappula(Nappula.Nappula siirrettava)
         {
+            int kohdecolumn = (int)poistettavaNappula.GetValue(Grid.ColumnProperty);
+            int kohderow = (int)poistettavaNappula.GetValue(Grid.ColumnProperty);
+            
+            gridPelialue.Children.Remove(poistettavaNappula);
+            
+            siirraNappulaa(siirrettava, kohdecolumn, kohderow);
+            //3.1 jos on niin tehdään syönti
+            //3.2 jos ei niin ei tehdä mitään eli valittuna pysyy edelleen se oikea nappula
         }
 
         /// <summary>
