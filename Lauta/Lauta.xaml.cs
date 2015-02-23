@@ -52,21 +52,16 @@ namespace Lauta
             if (valittuNappula == null)
             {
                 valittuNappula = (Nappula.Nappula)sender; // 1. Nappula valitaan aktiiviseksi (click)
+                // 2. Laitetaan talteen tieto aktiivisesti nappulasta
+                //5. Jos klikataan omaa nappulaa niin vaihdetaan aktiviseksi nappulaksi klikattu oma nappula eli palataan kohtaan 1.
             }
             else
             {
-                poistettavaNappula = (Nappula.Nappula)sender;
+                poistettavaNappula = (Nappula.Nappula)sender; //3. Jos seuraavaksi klikataan vastustajan nappulaa niin tarkistetaan olisiko se tallessa olevalle nappulalle kelvollinen syötävä
+                syoNappula(valittuNappula, poistettavaNappula);
             }
-            //5. Jos klikataan omaa nappulaa niin vaihdetaan aktiviseksi nappulaksi klikattu oma nappula eli palataan kohtaan 1.
-            if (nappulaValittu == false)
-            {
-                nappulaValittu = true; // 2. Laitetaan talteen tieto aktiivisesti nappulasta
-            }
-            else
-            {
-                //3. Jos seuraavaksi klikataan vastustajan nappulaa niin tarkistetaan olisiko se tallessa olevalle nappulalle kelvollinen syötävä
-                syoNappula(poistettavaNappula);
-            }
+            
+            poistettavaNappula = null;
         }
 
         /// <summary>
@@ -204,9 +199,9 @@ namespace Lauta
 
                     siirraNappulaa(siirrettava, kohderuutucolumn, kohderuuturow);
                     
-                    nappulaValittu = false;
+                    //nappulaValittu = false;
                     
-                    valittuNappula = null;
+                    //valittuNappula = null;
                     
                     mustanVuoro = false;
 
@@ -222,9 +217,9 @@ namespace Lauta
 
                     siirraNappulaa(siirrettava, kohderuutucolumn, kohderuuturow);
                     
-                    nappulaValittu = false;
+                    //nappulaValittu = false;
 
-                    valittuNappula = null;
+                    //valittuNappula = null;
 
                     mustanVuoro = true;
 
@@ -243,16 +238,21 @@ namespace Lauta
         {
             siirrettava.SetValue(Grid.ColumnProperty, kohdecolumn); //4.1 Jos on niin siirretään nappula tähän ruutuun
             siirrettava.SetValue(Grid.RowProperty, kohderow);
+
+            valittuNappula = null;
         }
 
-        private void syoNappula(Nappula.Nappula siirrettava)
+        private void syoNappula(Nappula.Nappula syoja, Nappula.Nappula syotava)
         {
-            int kohdecolumn = (int)poistettavaNappula.GetValue(Grid.ColumnProperty);
-            int kohderow = (int)poistettavaNappula.GetValue(Grid.ColumnProperty);
+            valittuNappula = null;
+
+            int kohdecolumn = (int)syotava.GetValue(Grid.ColumnProperty);
+            int kohderow = (int)syotava.GetValue(Grid.ColumnProperty);
             
-            gridPelialue.Children.Remove(poistettavaNappula);
-            
-            siirraNappulaa(siirrettava, kohdecolumn, kohderow);
+            gridPelialue.Children.Remove(syotava);
+
+            siirraNappulaa(syoja, kohdecolumn, kohderow);
+
             //3.1 jos on niin tehdään syönti
             //3.2 jos ei niin ei tehdä mitään eli valittuna pysyy edelleen se oikea nappula
         }
