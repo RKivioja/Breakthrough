@@ -24,11 +24,13 @@ namespace Lauta
         private static bool mustanVuoro;
         private static bool peliOhi;
 
-
         private static int siirrettavacolumn;
         private static int siirrettavarow;
         private static int kohderuutucolumn;
         private static int kohderuuturow;
+
+        private static int mustiaNappuloita;
+        private static int punaisiaNappuloita;
 
 
         /// <summary>
@@ -50,17 +52,12 @@ namespace Lauta
         {
             if (valittuNappula != null && poistettavaNappula == null)
             {
-                poistettavaNappula = (Nappula.Nappula)sender; //3. Jos seuraavaksi klikataan vastustajan nappulaa niin tarkistetaan olisiko se tallessa olevalle nappulalle kelvollinen syötävä
+                poistettavaNappula = (Nappula.Nappula)sender;
                 syoNappula(valittuNappula, poistettavaNappula);
                 poistettavaNappula = null;
                 valittuNappula = null;
             }
             else if (valittuNappula == null) valittuNappula = (Nappula.Nappula)sender;
-             // 1. Nappula valitaan aktiiviseksi (click) // 2. Laitetaan talteen tieto aktiivisesti nappulasta
-            //5. Jos klikataan omaa nappulaa niin vaihdetaan aktiviseksi nappulaksi klikattu oma nappula eli palataan kohtaan 1.
-            
-            
-            
         }
 
         /// <summary>
@@ -133,6 +130,8 @@ namespace Lauta
                     nappula.VerticalAlignment = VerticalAlignment.Stretch;
 
                     nappula.OnNappulaMouseDown += nappula_OnNappulaMouseDown; //
+
+                    mustiaNappuloita++;
                     
                     gridPelialue.Children.Add(nappula);
                 }
@@ -152,7 +151,9 @@ namespace Lauta
                     nappula.HorizontalAlignment = HorizontalAlignment.Stretch;
                     nappula.VerticalAlignment = VerticalAlignment.Stretch;
 
-                    nappula.OnNappulaMouseDown += nappula_OnNappulaMouseDown; //
+                    nappula.OnNappulaMouseDown += nappula_OnNappulaMouseDown;
+
+                    punaisiaNappuloita++;
 
                     gridPelialue.Children.Add(nappula);
                 }
@@ -160,7 +161,7 @@ namespace Lauta
         }
 
         /// <summary>
-        /// Aliohjelma, jonka pääasiallinen tehtävä on hoitaa pelin sisäinen logiikka. Kutsutaan aina kun pelaaja klikkaa jotakin ruutua.
+        /// Aliohjelma, jonka pääasiallinen tehtävä on hoitaa nappuloiden liikuttelu tyhjissä ruuduissa. Kutsutaan aina kun pelaaja klikkaa jotakin ruutua.
         /// </summary>
         /// <param name="sender">Eventin laukaissut ruutu(label)</param>
         /// <param name="e">Sisältää tietoja eventistä</param>
@@ -185,81 +186,94 @@ namespace Lauta
             {
                 if (Math.Abs(siirrettavacolumn - kohderuutucolumn) < 2 && Math.Abs(siirrettavarow - kohderuuturow) < 2 && siirrettavarow < kohderuuturow && siirrettava.Musta == true && mustanVuoro == true)
                 {
-                    //4. Jos seuraavaksi klikataankin tyhjää ruutua niin tarkistetaan olisiko se tallessa olevalle nappulalle kelvollinen siirto
-                    /*
-                    if (poistettavaNappula != null && poistettavacolumn == kohderuutucolumn && poistettavarow == kohderuuturow)
-                    {
-                        gridPelialue.Children.Remove(poistettavaNappula);
-                    }
-
-                    siirrettava.SetValue(Grid.ColumnProperty, kohderuutucolumn); //4.1 Jos on niin siirretään nappula tähän ruutuun
-                    siirrettava.SetValue(Grid.RowProperty, kohderuuturow);
-                    */
-
                     siirraNappulaa(siirrettava, kohderuutucolumn, kohderuuturow);
-                    
-                    //nappulaValittu = false;
-                    
-                    //valittuNappula = null;
-                    
-                    //mustanVuoro = false;
 
-                    if (Grid.GetRow(siirrettava) == gridPelialue.RowDefinitions.Count - 1)
-                    {
-                        siirrettava.Background = Brushes.Green;
-                        Voitto();
-                    }
+                    tarkistaVoitto(siirrettava);
                 }
 
                 if (Math.Abs(siirrettavacolumn - kohderuutucolumn) < 2 && Math.Abs(siirrettavarow - kohderuuturow) < 2 && siirrettavarow > kohderuuturow && siirrettava.Musta == false && mustanVuoro == false)
                 {
 
                     siirraNappulaa(siirrettava, kohderuutucolumn, kohderuuturow);
-                    
-                    //nappulaValittu = false;
 
-                    //valittuNappula = null;
-
-                    //mustanVuoro = true;
-
-                    if (Grid.GetRow(siirrettava) == 0)
-                    {
-                        siirrettava.Background = Brushes.Green;
-                        Voitto();
-                    }
+                    tarkistaVoitto(siirrettava);
                 }
             }
-            //4.1 Jos ei niin ei tehdä mitään
-
         }
 
+        /// <summary>
+        /// Siirtää nappulaa.
+        /// </summary>
+        /// <param name="siirrettava">Siirrettävä nappula</param>
+        /// <param name="kohdecolumn">Kohderuudun sarake</param>
+        /// <param name="kohderow">Kohderuudun rivi</param>
         private static void siirraNappulaa(Nappula.Nappula siirrettava, int kohdecolumn, int kohderow)
         {
-            siirrettava.SetValue(Grid.ColumnProperty, kohdecolumn); //4.1 Jos on niin siirretään nappula tähän ruutuun
+            siirrettava.SetValue(Grid.ColumnProperty, kohdecolumn);
             siirrettava.SetValue(Grid.RowProperty, kohderow);
 
             if (mustanVuoro == true) mustanVuoro = false;
             else mustanVuoro = true;
-
             
             valittuNappula = null;
         }
 
+        /// <summary>
+        /// Toteuttaa nappulan syömisen.
+        /// </summary>
+        /// <param name="syoja">Liikutettava nappula</param>
+        /// <param name="syotava">Syötävä nappula</param>
         private void syoNappula(Nappula.Nappula syoja, Nappula.Nappula syotava)
         {
-            
-            //valittuNappula = null;
-            
-            int kohdecolumn = (int)syotava.GetValue(Grid.ColumnProperty);
-            int kohderow = (int)syotava.GetValue(Grid.RowProperty);
-            
-            gridPelialue.Children.Remove(syotava);
+            if ((syoja.Musta == true && syotava.Musta == false && mustanVuoro == true) || (syoja.Musta == false && syotava.Musta == true && mustanVuoro == false))
+            {
+                
+                int syojacolumn = (int)syoja.GetValue(Grid.ColumnProperty);
+                int syojarow = (int)syoja.GetValue(Grid.RowProperty);
 
-            siirraNappulaa(syoja, kohdecolumn, kohderow);
+                int syotavacolumn = (int)syotava.GetValue(Grid.ColumnProperty);
+                int syotavarow = (int)syotava.GetValue(Grid.RowProperty);
 
-            //poistettavaNappula = null;
-            //3.1 jos on niin tehdään syönti
-            //3.2 jos ei niin ei tehdä mitään eli valittuna pysyy edelleen se oikea nappula*/
+                if (Math.Abs(syojacolumn - syotavacolumn) < 2 && Math.Abs(syojarow - syotavarow) < 2 && syojacolumn != syotavacolumn)
+                {
+                    if ((syoja.Musta == true && (syojarow - syotavarow) < 0) || (syoja.Musta == false && (syojarow - syotavarow) > 0))
+                    {
+                        gridPelialue.Children.Remove(syotava);
+
+                        if (syotava.Musta == true) mustiaNappuloita--;
+                        else punaisiaNappuloita--;
+
+                        siirraNappulaa(syoja, syotavacolumn, syotavarow);
+                    }
+                }
+            }
+
+            tarkistaVoitto(syoja);
+        }
+
+        /// <summary>
+        /// Tarkistaa voittoehtojen toteutumista.
+        /// </summary>
+        /// <param name="siirretty">Nappula, jonka siirtämisen jälkeen voittoehtojen toteutumisen tarkistus on tarpeellista.</param>
+        private void tarkistaVoitto(Nappula.Nappula siirretty)
+        {
+            if (Grid.GetRow(siirretty) == 0 && siirretty.Musta == false)
+            {
+                siirretty.Background = Brushes.Green;
+                Voitto();
+            }
+
+            if (Grid.GetRow(siirretty) == gridPelialue.RowDefinitions.Count - 1 && siirretty.Musta == true)
+            {
+                siirretty.Background = Brushes.Green;
+                Voitto();
+            }
+
+            if (punaisiaNappuloita == 0 || mustiaNappuloita == 0)
+            {
+                siirretty.Background = Brushes.Green;
+                Voitto();
+            }
         }
 
         /// <summary>
