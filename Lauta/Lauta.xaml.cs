@@ -244,10 +244,11 @@ namespace Lauta
                         else punaisiaNappuloita--;
 
                         siirraNappulaa(syoja, syotavacolumn, syotavarow);
+
+                        valittuNappula = null;
                     }
                 }
             }
-
             tarkistaVoitto(syoja);
         }
 
