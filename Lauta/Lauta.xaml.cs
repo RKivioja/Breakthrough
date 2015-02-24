@@ -21,7 +21,6 @@ namespace Lauta
     {
         private static Nappula.Nappula valittuNappula;
         private static Nappula.Nappula poistettavaNappula;
-        private static bool nappulaValittu;
         private static bool mustanVuoro;
         private static bool peliOhi;
 
@@ -49,19 +48,19 @@ namespace Lauta
         /// <param name="e">Sisältää tietoja eventistä</param>
         private void nappula_OnNappulaMouseDown(object sender, RoutedEventArgs e)
         {
-            if (valittuNappula == null)
-            {
-                valittuNappula = (Nappula.Nappula)sender; // 1. Nappula valitaan aktiiviseksi (click)
-                // 2. Laitetaan talteen tieto aktiivisesti nappulasta
-                //5. Jos klikataan omaa nappulaa niin vaihdetaan aktiviseksi nappulaksi klikattu oma nappula eli palataan kohtaan 1.
-            }
-            else
+            if (valittuNappula != null && poistettavaNappula == null)
             {
                 poistettavaNappula = (Nappula.Nappula)sender; //3. Jos seuraavaksi klikataan vastustajan nappulaa niin tarkistetaan olisiko se tallessa olevalle nappulalle kelvollinen syötävä
                 syoNappula(valittuNappula, poistettavaNappula);
+                poistettavaNappula = null;
+                valittuNappula = null;
             }
+            else if (valittuNappula == null) valittuNappula = (Nappula.Nappula)sender;
+             // 1. Nappula valitaan aktiiviseksi (click) // 2. Laitetaan talteen tieto aktiivisesti nappulasta
+            //5. Jos klikataan omaa nappulaa niin vaihdetaan aktiviseksi nappulaksi klikattu oma nappula eli palataan kohtaan 1.
             
-            poistettavaNappula = null;
+            
+            
         }
 
         /// <summary>
@@ -203,7 +202,7 @@ namespace Lauta
                     
                     //valittuNappula = null;
                     
-                    mustanVuoro = false;
+                    //mustanVuoro = false;
 
                     if (Grid.GetRow(siirrettava) == gridPelialue.RowDefinitions.Count - 1)
                     {
@@ -221,7 +220,7 @@ namespace Lauta
 
                     //valittuNappula = null;
 
-                    mustanVuoro = true;
+                    //mustanVuoro = true;
 
                     if (Grid.GetRow(siirrettava) == 0)
                     {
@@ -239,22 +238,28 @@ namespace Lauta
             siirrettava.SetValue(Grid.ColumnProperty, kohdecolumn); //4.1 Jos on niin siirretään nappula tähän ruutuun
             siirrettava.SetValue(Grid.RowProperty, kohderow);
 
+            if (mustanVuoro == true) mustanVuoro = false;
+            else mustanVuoro = true;
+
+            
             valittuNappula = null;
         }
 
         private void syoNappula(Nappula.Nappula syoja, Nappula.Nappula syotava)
         {
-            valittuNappula = null;
-
+            
+            //valittuNappula = null;
+            
             int kohdecolumn = (int)syotava.GetValue(Grid.ColumnProperty);
-            int kohderow = (int)syotava.GetValue(Grid.ColumnProperty);
+            int kohderow = (int)syotava.GetValue(Grid.RowProperty);
             
             gridPelialue.Children.Remove(syotava);
 
             siirraNappulaa(syoja, kohdecolumn, kohderow);
 
+            //poistettavaNappula = null;
             //3.1 jos on niin tehdään syönti
-            //3.2 jos ei niin ei tehdä mitään eli valittuna pysyy edelleen se oikea nappula
+            //3.2 jos ei niin ei tehdä mitään eli valittuna pysyy edelleen se oikea nappula*/
         }
 
         /// <summary>
